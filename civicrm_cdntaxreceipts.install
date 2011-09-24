@@ -1,0 +1,50 @@
+<?php
+
+/**
+ * @file
+ * Install file for civicrm_cdntaxreceipts
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function civicrm_cdntaxreceipts_install() {
+  require_once drupal_get_path('module', 'civicrm') . '/civicrm.module';
+
+  if ( ! civicrm_initialize( ) ) {
+    return;
+  }
+
+  require_once 'CRM/Core/Config.php';
+  $config =& CRM_Core_Config::singleton();
+
+  $sql = "CREATE TABLE civicrm_cdntaxreceipts (" .
+            " contribution_id INT UNSIGNED NOT NULL, " .
+            " tax_receipt_date datetime NULL, ".
+            " PRIMARY KEY (contribution_id), " .
+            " FOREIGN KEY (contribution_id) REFERENCES civicrm_contribution(id) ON DELETE CASCADE " .
+         ")";
+
+  require_once 'CRM/Core/DAO.php';
+  CRM_Core_DAO::executeQuery( $sql );
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function civicrm_cdntaxreceipts_uninstall() {
+  require_once drupal_get_path('module', 'civicrm') . '/civicrm.module';
+
+  if ( ! civicrm_initialize( ) ) {
+    return;
+  }
+
+  require_once 'CRM/Core/Config.php';
+  $config =& CRM_Core_Config::singleton();
+
+  $sql = "DROP TABLE civicrm_cdntaxreceipts";
+
+  require_once 'CRM/Core/DAO.php';
+  CRM_Core_DAO::executeQuery( $sql );
+}
+
