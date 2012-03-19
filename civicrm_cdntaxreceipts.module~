@@ -304,7 +304,7 @@ function civicrm_cdntaxreceipts_admin_form() {
   );
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Save configuration'),
+    '#value' => t('Save configuration and generate Preview'),
   );
 
   return $form;
