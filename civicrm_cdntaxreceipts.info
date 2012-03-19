@@ -3,4 +3,5 @@ description = Provide manually triggered PDF Tax Receipts for Canadian charitabl
 dependencies[] = civicrm
 package = CiviCRM
 core = 6.x
-version = 6.x-1.0-beta3
+version = 6.x-2.1
+

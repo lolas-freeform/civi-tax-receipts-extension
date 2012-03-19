@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This module creates Canadian (CDN) Tax Receipts for charitable donations.
+ * This module creates Canadian (CDN) Tax Receipts for charitable organizations.
  *     
  * Please see README.txt
  *
@@ -10,92 +10,122 @@
  * originally Contributed by PeaceWorks Computer Consulting
  * http://www.peaceworks.ca
  *
- * modifications by Semper IT inc. - Karin Gerritsen - May-Sep 2011
+ * modifications by Semper IT inc. - Karin Gerritsen 2011/2012
  * karin@semper-it.com
  */
 
 require_once('civicrm_cdntaxreceipts.inc');
 
 /**
- * Implements hook_civicrm_buildform().
+ * Implementation of hook_civicrm_buildform().
  * 
  * Injects elements into a form being built so we can issue 
- * a tax reciept from the admin interface.
- * 
+ * a tax receipt from the CiviCRM admin interface. 
  */
 
 function civicrm_cdntaxreceipts_civicrm_buildForm( $formName, &$form ) {
 
-    if ( is_a( $form, 'CRM_Contribute_Form_ContributionView' ) ) {
+  if ( is_a( $form, 'CRM_Contribute_Form_ContributionView' ) ) {
 
-        // add "Issue Tax Receipt" button to the "View Contribution" page
-        // NOTE: in Firefox display ok; in Chrome/Safari: padding top/bottom missing (ie smaller buttons)
-        // completely functional though.
+    // add "Issue Tax Receipt" button to the "View Contribution" page
+    // if the Tax Receipt has NOT yet been issued -> display a white maple leaf icon
+    // if the Tax Receipt has already been issued -> display a red maple leaf icon
 
-        $buttons = array( array ( 'type'      => 'submit',  
-                                  'subName'   => 'send_receipt',
-                                  'name'      => ts('Issue Tax Receipt'),  
-                                  'isDefault' => false ), );
+    $contributionId = $form->get( 'id' );
+    $contribution = & new CRM_Contribute_DAO_Contribution();
+    $contribution->id = $contributionId;
+        
+    $original_receipt = ! cdntaxreceipts_taxReceiptSent( $contribution );
+        
+    if( $original_receipt ) {
+ 
+      $buttons = array( array ( 'type'      => 'submit',  
+                                'subName'   => 'send_receipt',
+                                'name'      => ts('Issue Tax Receipt'),  
+                                'isDefault' => false ), );
 
-        $form->addButtons( $buttons );
-    }
+    } else {
+
+      $buttons = array( array ( 'type'      => 'submit',  
+                                'subName'   => 'send_receipt_copy',
+                                'name'      => ts('Issue Tax Receipt'),  
+                                'isDefault' => false ), );
+
+     } 
+    
+     $form->addButtons( $buttons );
+   
+     // load the CSS necessary to style the buttons that we just created. 
+     
+     drupal_add_css(drupal_get_path('module', 'civicrm_cdntaxreceipts') . '/civicrm_cdntaxreceipts.css');
+  }
 }
 
 /**
- * Implements hook_civicrm_postProcess().
+ * Implementation of hook_civicrm_postProcess().
  * 
  * Called when a form comes back for processing. Basically, we want to process
  * the button we added in civicrm_cdntaxreceipts_civicrm_buildForm().
- * 
  */
 
 function civicrm_cdntaxreceipts_civicrm_postProcess( $formName, &$form ) {
 
-    if ( ! is_a( $form, 'CRM_Contribute_Form_ContributionView' ) ) return;
+  if ( ! is_a( $form, 'CRM_Contribute_Form_ContributionView' ) ) return;
 
-    // get the contribution
-    $contributionId = $form->get( 'id' );
-    $contribution = & new CRM_Contribute_DAO_Contribution();
-    $contribution->id = $contributionId;
+  // get the Contribution info
+  $contributionId = $form->get( 'id' );
+  $contribution = & new CRM_Contribute_DAO_Contribution();
+  $contribution->id = $contributionId;
 
-    if ( ! $contribution->find( true ) ) {
-        CRM_Core_Error::fatal( "Could not retrieve details for this contribution" );
-        return;
-    }
+  if ( ! $contribution->find( true ) ) {
+    CRM_Core_Error::fatal( "Could not retrieve details for this contribution" );
+    return;
+  }
 
-    // check the contribution is receiptable
-    $contributionType = & new CRM_Contribute_DAO_ContributionType();
-    $contributionType->id = $contribution->contribution_type_id;
-    if ( ! $contributionType->find( true ) ) {
-        CRM_Core_Error::fatal( "Could not find corresponding contribution type." );
-    }
+  // check if the Contribution is of a Type that is indeed Tax receiptable
+  $contributionType = & new CRM_Contribute_DAO_ContributionType();
+  $contributionType->id = $contribution->contribution_type_id;
+  if ( ! $contributionType->find( true ) ) {
+    CRM_Core_Error::fatal( "Could not find corresponding contribution type." );
+  }
 
-    // check if it's the original receipt or a duplicate
-    $original_receipt = ! cdntaxreceipts_taxReceiptSent( $contribution );
+  // check if a Tax Receipt has already been issued previously for this Contribution
+  // (in case the white maple leaf icon may have been cached) 
 
-    if ( $contributionType->is_deductible ) {
-        // print the receipt or send it, depending on which button was submitted
-        if ( $original_receipt ) cdntaxreceipts_recordTaxReceipt( $contribution );
+  $original_receipt = ! cdntaxreceipts_taxReceiptSent( $contribution );
 
-        if ( $_POST['_qf_ContributionView_submit_send_receipt'] == 'Issue Tax Receipt' ) {
-            cdntaxreceipts_sendTaxReceipt( $contribution, $original_receipt );
-            cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt, $print_instead_of_email=true );
-         }
-
-    } else {
-        $statusMsg = ts('This contribution is not tax deductible. No receipt has been issued.');
-        CRM_Core_Session::setStatus( $statusMsg );
-    }
+  if ( $contributionType->is_deductible ) {
+  	
+  	// record the Contribution ID number in the CiviCRM database
+  	
+    if ( $original_receipt ) cdntaxreceipts_recordTaxReceipt( $contribution );
+    
+    // Issue the Tax Receipt      
+       
+      if ( $_POST['_qf_ContributionView_submit_send_receipt'] == 'Issue Tax Receipt' or 
+           $_POST['_qf_ContributionView_submit_send_receipt_copy'] == 'Issue Tax Receipt' ) {      
+                cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt );
+          }
+      
+  } 
+    
+  else 
+    
+  {
+    $statusMsg = ts('This contribution is not tax deductible. No receipt has been issued.');
+    CRM_Core_Session::setStatus( $statusMsg );
+  } 
 }
 
 /**
+ * Implementation of hook_menu().
+ * 
  * Drupal configuration
- * (CiviCRM doesn't let us dynamically inject fields into templates.  Avoid forcing template changes
- * during installation by moving configuration to the Drupal side.)
+ * CiviCRM doesn't let us dynamically inject fields into templates.Avoid forcing template changes
+ * during installation by moving configuration to the Drupal side.
  */
 
-function civicrm_cdntaxreceipts_menu()
-{
+function civicrm_cdntaxreceipts_menu() {
   $items = array();
   $items['admin/settings/cdntaxreceipts'] = array(
     'title' => 'CiviCRM CDN Tax Receipts',
@@ -109,9 +139,15 @@ function civicrm_cdntaxreceipts_menu()
   return $items;
 }
 
-function civicrm_cdntaxreceipts_admin_form()
-{
+function civicrm_cdntaxreceipts_admin_form() {
+	
   $form = array();
+  
+  $form['help'] = array(
+  	'#type' => 'fieldset',
+  	'#title' => t('Tip'),
+		'#description' => t('After you fill out this form and save your Configuration, create a fake Donation in CiviCRM and issue a Tax Receipt for it to check the graphics/layout of the Tax Receipt that is generated. If necessary - rework your graphics and come back to this Form to upload the new version(s).'),
+  );
 
   $form['org'] = array(
     '#type' => 'fieldset',
@@ -207,27 +243,24 @@ function civicrm_cdntaxreceipts_admin_form()
     '#type' => 'file',
     '#title' => t('Logo'),
     '#size' => 60,
-    '#description' => 'Logo size: 280x120 pixels.',
-//    '#required' => TRUE,
+    '#description' => 'Logo size: 280x120 pixels; File types allowed: .jpg .png - Currently using: ' . variable_get('cdntaxreceipts_logo', ''),
   );
   $form['receipt']['cdntaxreceipts_signature'] = array(
     '#type' => 'file',
     '#title' => t('Signature'),
     '#size' => 60,
-    '#description' => 'Signature size: 141x58 pixels.',
-//    '#required' => TRUE,
+    '#description' => 'Signature size: 141x58 pixels; File types allowed: .jpg .png - Currently using: ' . variable_get('cdntaxreceipts_signature', ''),
   );
   $form['receipt']['cdntaxreceipts_bg'] = array(
     '#type' => 'file',
     '#title' => t('Background Image'),
     '#size' => 60,
-    '#description' => 'Watermark Image size: 250x250 pixels.',
+    '#description' => 'Watermark Image size: 250x250 pixels; File types allowed: .jpg .png - Currently using: ' . variable_get('cdntaxreceipts_bg', ''),
   );
 
 /**
  * Create an Email message fieldset to gather info about the Email message to accompany the Tax Receipt
- *
-*/ 
+ */ 
 
   $form['message'] = array(
     '#type' => 'fieldset',
@@ -257,7 +290,7 @@ function civicrm_cdntaxreceipts_admin_form()
    '#size' => 50,
    '#maxlength' => 50,
    '#default_value' => variable_get('cdntaxreceipts_archive', ''),
-   '#description' => t('Address you would like to Send a copy of the Email containing the Tax Receipt to. This is useful to create and archive.'),
+   '#description' => t('Address you would like to Send a copy of the Email containing the Tax Receipt to. This is useful to create an archive.'),
    '#required' => TRUE,
   );
   $form['message']['cdntaxreceipts_message'] = array(
@@ -271,7 +304,7 @@ function civicrm_cdntaxreceipts_admin_form()
   );
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Save configuration'),
+    '#value' => t('Save configuration and generate Preview'),
   );
 
   return $form;
@@ -280,19 +313,22 @@ function civicrm_cdntaxreceipts_admin_form()
 function civicrm_cdntaxreceipts_admin_form_submit($form, &$form_state)
 {
   // save data to Drupal vars
+  
   foreach ( $form_state['values'] as $key => $value ) {
     if ( $key != 'cdntaxreceipts_logo' && $key != 'cdntaxreceipts_signature' && $key != 'cdntaxreceipts_bg' ) {
       variable_set($key, $value);
     }
   }
 
-  // save logo, signature and background files
+  // save logo, signature and background (watermark) files
+  
   foreach ( array('cdntaxreceipts_logo', 'cdntaxreceipts_signature', 'cdntaxreceipts_bg') as $key ) {
     if ( is_uploaded_file( $_FILES['files']['tmp_name'][$key] ) ) {
       $mypath = conf_path().'/files';
       $directory = variable_get('file_system_path',$mypath);
 
       $validators = array( 'file_validate_is_image' => array() );
+      
       $file = file_save_upload( $key, $validators, $directory, FILE_EXISTS_REPLACE );
 
       if ( $file ) {
@@ -315,11 +351,11 @@ function civicrm_cdntaxreceipts_admin_form_submit($form, &$form_state)
 
 function civicrm_cdntaxreceipts_cron()
 {
-    $temp_dir = file_directory_temp();
-    $files = $temp_dir . '/pdf-receipt-*.pdf';
+  $temp_dir = file_directory_temp();
+  $files = $temp_dir . '/pdf-receipt-*.pdf';
 
-    foreach ( glob( $files ) as $f ) {
-       unlink( $f );
-    }
+  foreach ( glob( $files ) as $f ) {
+    unlink( $f );
+  }
 }
 
