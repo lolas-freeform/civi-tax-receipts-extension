@@ -118,8 +118,21 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
   $pdf->Write(10, $address_line_3);
   $pdf->SetFont('Arial', 'B', 8);
   $pdf->SetXY($x_offset + 95, $y_offset + 80);
-  $pdf->Write(10, "Source: " . $source_funds);
+    
+  if (strlen($source_funds) < 38) {
+    $pdf->Write(10, "Source: " . $source_funds);
+  } else {
+    $source_funds_words = explode(" ", substr($source_funds, 0, 38));
+    $source_funds_lastbit = array_pop($source_funds_words);  	
+    $pdf->Write(10, "Source: " . implode(" ", $source_funds_words));
 
+    $source_funds_count = count($source_funds_words);  	
+    $source_funds_nextline = array_splice(explode(" ", $source_funds), $source_funds_count);
+  	
+    $pdf->SetXY($x_offset + 113, $y_offset + 84);
+    $pdf->Write(10, implode(" ", $source_funds_nextline));
+  }
+    
   $pdf->SetXY($x_offset + 30, $y_offset + 102);
   $pdf->Write(10, variable_get('cdntaxreceipts_org_name', ''));
   $pdf->SetFont('Arial', '', 8);
@@ -193,8 +206,21 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
     $pdf->Write(10, $address_line_3);
     $pdf->SetFont('Arial', 'B', 8);
     $pdf->SetXY($x_offset + 95, $y_offset + 80);
-    $pdf->Write(10, "Source: " . $source_funds);
+    
+    if (strlen($source_funds) < 38) {
+      $pdf->Write(10, "Source: " . $source_funds);
+    } else {
+      $source_funds_words = explode(" ", substr($source_funds, 0, 38));
+      $source_funds_lastbit = array_pop($source_funds_words);  	
+      $pdf->Write(10, "Source: " . implode(" ", $source_funds_words));
 
+      $source_funds_count = count($source_funds_words);  	
+      $source_funds_nextline = array_splice(explode(" ", $source_funds), $source_funds_count);
+  	
+      $pdf->SetXY($x_offset + 113, $y_offset + 84);
+      $pdf->Write(10, implode(" ", $source_funds_nextline));
+    }
+    
     $pdf->SetXY($x_offset + 30, $y_offset + 102);
     $pdf->Write(10, variable_get('cdntaxreceipts_org_name', ''));
     $pdf->SetFont('Arial', '', 8);
