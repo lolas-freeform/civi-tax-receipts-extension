@@ -258,7 +258,7 @@ function cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt ) {
 
   // grab the various objects that are relevant to the mail message...
   require_once 'CRM/Contribute/DAO/ContributionType.php';
-  $contributionType = & new CRM_Contribute_DAO_ContributionType();
+  $contributionType =  new CRM_Contribute_DAO_ContributionType();
   $contributionType->id = $contribution->contribution_type_id;
   if ( ! $contributionType->find( true ) ) {
     CRM_Core_Error::fatal( "Could not find corresponding contribution type." );
