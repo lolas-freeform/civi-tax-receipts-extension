@@ -58,18 +58,22 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
   $padded_number = str_pad($contribution->id, 8, 0, STR_PAD_LEFT);
   $receipt_number = variable_get('cdntaxreceipts_prefix', '') . $padded_number;
 
-  $pdf_file = file_directory_temp() . '/pdf-receipt-' . $padded_number . '-' . $hash  . '.pdf';
+  $pdf_file = file_directory_temp() . '/pdf-receipt-' . $padded_number . '.pdf';
   $user_friendly = 'receipt-' . $padded_number . '.pdf';
 
   $source_funds = $contribution->source;
 
-  require('ufpdf/ufpdf.php');
+//  require('ufpdf/ufpdf.php');
+require_once('this_tcpdf/tcpdf.php');
 
-  $pdf = new UFPDF();
+//  $pdf = new UFPDF();
+//  $pdf = new TCPDF();
+  $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
   $pdf->Open();
   $pdf->SetAuthor(variable_get('cdntaxreceipts_org_name', ''));
-  $pdf->AddPage();
 
+  $pdf->AddPage();
+  
   $x_offset = 0;
   $y_offset = -7;
 
@@ -79,7 +83,7 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
   if($background_image) $pdf->Image(variable_get('cdntaxreceipts_bg', ''), $x_offset + 90, $y_offset + 35);
 
   $pdf->Image(variable_get('cdntaxreceipts_logo', $pdf_receipt_files_path . 'your-logo.png'), $x_offset + 10, $y_offset + 14, 70, 30);
-  $pdf->SetFont('Arial', 'B', 8);
+  $pdf->SetFont('Helvetica', 'B', 8);
 
   $pdf->SetXY($x_offset + 85, $y_offset + 20);
   $pdf->Write(10, $line_1);
@@ -104,10 +108,10 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
   $pdf->Image(variable_get('cdntaxreceipts_signature', $pdf_receipt_files_path . 'authorized-signature.png'), $x_offset + 25, $y_offset + 78, 30, 15);
   $pdf->Line($x_offset + 20, $y_offset + 88, $x_offset + 60, $y_offset + 88);
   $pdf->SetXY($x_offset + 22, $y_offset + 85);
-  $pdf->SetFont("Arial", "I", 7);
+  $pdf->SetFont("Helvetica", "I", 7);
   $pdf->Write(10, 'Authorized Signature');
 
-  $pdf->SetFont('Arial', 'B', 8);
+  $pdf->SetFont('Helvetica', 'B', 8);
   $pdf->SetXY($x_offset + 95, $y_offset + 62);
   $pdf->Write(10, "Received from: " . $displayName);
   $pdf->SetXY($x_offset + 128, $y_offset + 66);
@@ -116,7 +120,7 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
   $pdf->Write(10, $address_line_2);
   $pdf->SetXY($x_offset + 128, $y_offset + 74);
   $pdf->Write(10, $address_line_3);
-  $pdf->SetFont('Arial', 'B', 8);
+  $pdf->SetFont('Helvetica', 'B', 8);
   $pdf->SetXY($x_offset + 95, $y_offset + 80);
     
   if (strlen($source_funds) < 38) {
@@ -135,7 +139,7 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
     
   $pdf->SetXY($x_offset + 30, $y_offset + 102);
   $pdf->Write(10, variable_get('cdntaxreceipts_org_name', ''));
-  $pdf->SetFont('Arial', '', 8);
+  $pdf->SetFont('Helvetica', '', 8);
   $pdf->SetXY($x_offset + 30, $y_offset + 106);
   $pdf->Write(10, variable_get('cdntaxreceipts_address_line1', ''));
   $pdf->SetXY($x_offset + 30, $y_offset + 110);
@@ -166,7 +170,7 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
     if ($background_image) $pdf->Image(variable_get('cdntaxreceipts_bg', ''), $x_offset + 90, $y_offset + 35);
 
     $pdf->Image(variable_get('cdntaxreceipts_logo', $pdf_receipt_files_path . 'your-logo.png'), $x_offset + 10, $y_offset + 14, 70, 30);
-    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->SetFont('Helvetica', 'B', 8);
 
     $pdf->SetXY($x_offset + 85, $y_offset + 20);
     $pdf->Write(10, $line_1);
@@ -192,10 +196,10 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
     $pdf->Image(variable_get('cdntaxreceipts_signature', $pdf_receipt_files_path . 'authorized-signature.png'), $x_offset + 25, $y_offset + 78, 30, 15);
     $pdf->Line($x_offset + 20, $y_offset + 88, $x_offset + 60, $y_offset + 88);
     $pdf->SetXY($x_offset + 22, $y_offset + 85);
-    $pdf->SetFont("Arial", "I", 7);
+    $pdf->SetFont("Helvetica", "I", 7);
     $pdf->Write(10, 'Authorized Signature');
 
-    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->SetFont('Helvetica', 'B', 8);
     $pdf->SetXY($x_offset + 95, $y_offset + 62);
     $pdf->Write(10, "Received from: " . $displayName);
     $pdf->SetXY($x_offset + 128, $y_offset + 66);
@@ -204,7 +208,7 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
     $pdf->Write(10, $address_line_2);
     $pdf->SetXY($x_offset + 128, $y_offset + 74);
     $pdf->Write(10, $address_line_3);
-    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->SetFont('Helvetica', 'B', 8);
     $pdf->SetXY($x_offset + 95, $y_offset + 80);
     
     if (strlen($source_funds) < 38) {
@@ -223,7 +227,7 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
     
     $pdf->SetXY($x_offset + 30, $y_offset + 102);
     $pdf->Write(10, variable_get('cdntaxreceipts_org_name', ''));
-    $pdf->SetFont('Arial', '', 8);
+    $pdf->SetFont('Helvetica', '', 8);
     $pdf->SetXY($x_offset + 30, $y_offset + 106);
     $pdf->Write(10, variable_get('cdntaxreceipts_address_line1', ''));
     $pdf->SetXY($x_offset + 30, $y_offset + 110);
@@ -242,12 +246,12 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
     $pdf->SetXY($x_offset + 50, $y_offset + 130);
     $pdf->Write(10, 'Canadian Revenue Agency: www.cra-arc.gc.ca/charites');
   }
-
+    
   $pdf->Close();
-
+  
   $pdf->Output($pdf_file, 'F');
 
-  while(@ob_end_clean());
+  //while(@ob_end_clean());
   $pdf->Output($pdf_file, 'D');
 
   return array($pdf_file, $user_friendly);

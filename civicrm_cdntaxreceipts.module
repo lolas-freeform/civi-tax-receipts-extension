@@ -45,18 +45,21 @@ function civicrm_cdntaxreceipts_civicrm_buildForm( $formName, &$form ) {
 
     } else {
 
+    	// this is essentially the same button - but it has a different 
+    	// subName -> which is used (css) to display the red maple leaf instead.
+    	
       $buttons = array( array ( 'type'      => 'submit',  
                                 'subName'   => 'send_receipt_copy',
                                 'name'      => ts('Issue Tax Receipt'),  
                                 'isDefault' => false ), );
 
-     } 
+    } 
     
-     $form->addButtons( $buttons );
+    $form->addButtons( $buttons );
    
-     // load the CSS necessary to style the buttons that we just created. 
+    // load the CSS necessary to style the buttons that we just created. 
      
-     drupal_add_css(drupal_get_path('module', 'civicrm_cdntaxreceipts') . '/civicrm_cdntaxreceipts.css');
+    drupal_add_css(drupal_get_path('module', 'civicrm_cdntaxreceipts') . '/civicrm_cdntaxreceipts.css');
   }
 }
 
@@ -99,13 +102,11 @@ function civicrm_cdntaxreceipts_civicrm_postProcess( $formName, &$form ) {
   	
     if ( $original_receipt ) cdntaxreceipts_recordTaxReceipt( $contribution );
     
-    // Issue the Tax Receipt      
-       
-      if ( $_POST['_qf_ContributionView_submit_send_receipt'] == 'Issue Tax Receipt' or 
-           $_POST['_qf_ContributionView_submit_send_receipt_copy'] == 'Issue Tax Receipt' ) {      
-                cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt );
-          }
-      
+    // Issue the Tax Receipt
+    if ( !isset($_POST['_qf_ContributionView_submit_send_receipt']) == 'Issue Tax Receipt'  or
+         !isset($_POST['_qf_ContributionView_submit_send_receipt_copy']) == 'Issue Tax Receipt' ) {     	
+        cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt );
+    }
   } 
     
   else 
