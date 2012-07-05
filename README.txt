@@ -3,7 +3,7 @@ Receipts (for both offline and online contributions) are MANUALLY issued via a "
 
 It was developed in close cooperation with a senior accountant (partner at a major firm) who consulted CRA on a number of occasions - though we
 are confident that the module is meeting CRA's current guidelines for Tax Receipts re: Charitable Donations, all users of this module should remain
-dilligent about keeping informed on CRA's guidelines as they may change in future. 
+dilligent about keeping informed on CRA's guidelines as they may change in future.
 
 For more on what and how, please see:
 http://wiki.civicrm.org/confluence/display/CRM/Canadian+Charitable+Receipts
@@ -18,8 +18,17 @@ Drupal Installation:
     b. specify items for Receipt configuration: including Receipt Prefix, upload your organization's logo (.png or .jpg),
        upload a scanned signature (.png or .jpg) of someone authorized to sign tax receipts, upload a watermark
        (background image) (.png or .jpg)
-    c. enter the details for the Email message to accompany the tax receipt: including, subject and message, Email From: and also 
+    c. enter the details for the Email message to accompany the tax receipt: including, subject and message, Email From: and also
        an Archive Email address
+
+TCPDF Installation:
+---------------------
+For the 7.x branch, I've replaced UFPDF with TCPDF.
+
+Instructions:
+1.  Download TCPDF from: https://sourceforge.net/projects/tcpdf/files/ and unzip it
+2.  Drop tcpdf/ in: /modules/civicrm_cdntaxreceipts/
+3.  AND rename it to: this_tcpdf/
 
 CiviCRM Setup:
 --------------------
