@@ -40,9 +40,9 @@ To configure tax receipts in CiviCRM:
 Use:
 --------------------
 This module adds a "Issue Tax Receipt" button to the View Contribution screen. When clicked a set of Tax Receipts are issued:
-1.  A copy is downloaded to the (staff) computer it is issued from (and can be printed to be be mailed)
+1.  A copy is downloaded to the (staff) computer it is issued from (and can be printed to be mailed)
 2.  A copy is Emailed to the Email archive address
 3.  A copy is Emailed to the donor (only succeeds if donor Email is in the Contact record)
 
 If the "Issue Tax Receipt" button is clicked again a second set of receipts - now marked "Duplicate Copy" will be issued. The Source
-field is printed ont he Tax receipt and can be used to eg add a note if this receipt replaces one that was issued previously.
+field is printed on the Tax receipt and can be used to eg add a note if this receipt replaces one that was issued previously.

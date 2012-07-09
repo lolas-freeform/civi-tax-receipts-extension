@@ -62,193 +62,34 @@ function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
   $user_friendly = 'Receipt-' . $receipt_number . '.pdf';
 
   $source_funds = $contribution->source;
+  $amount = $contribution->total_amount - $contribution->non_deductible_amount;
 
-//  require('ufpdf/ufpdf.php');
-require_once('this_tcpdf/tcpdf.php');
 
-//  $pdf = new UFPDF();
-//  $pdf = new TCPDF();
+  //  require('ufpdf/ufpdf.php');
+  require_once('this_tcpdf/tcpdf.php');
+  //  $pdf = new UFPDF();
+
   $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
   $pdf->Open();
   $pdf->SetAuthor(variable_get('cdntaxreceipts_org_name', ''));
+  $pdf->setPrintHeader(false);
+  $pdf->setPrintFooter(false);
 
   $pdf->AddPage();
 
-  $x_offset = 0;
-  $y_offset = -7;
-
-  if(!$original_receipt) $pdf->Image($pdf_receipt_files_path . 'duplicate_copy.png', $x_offset + 35, $y_offset + 35, 60, 48);
-
-  $background_image = variable_get('cdntaxreceipts_bg', '');
-  if($background_image) $pdf->Image(variable_get('cdntaxreceipts_bg', ''), $x_offset + 90, $y_offset + 35);
-
-  $pdf->Image(variable_get('cdntaxreceipts_logo', $pdf_receipt_files_path . 'your-logo.png'), $x_offset + 10, $y_offset + 14, 70, 30);
-  $pdf->SetFont('Helvetica', 'B', 8);
-
-  $pdf->SetXY($x_offset + 95, $y_offset + 20);
-  $pdf->Write(10, $line_1);
-  $pdf->SetXY($x_offset + 125, $y_offset + 24);
-  $pdf->Write(10, 'Thank You!');
-  $pdf->SetXY($x_offset + 95, $y_offset + 28);
-  $pdf->Write(10, 'Charitable Registration No. ' . variable_get('cdntaxreceipts_charitable_no', ''));
-  $pdf->SetXY($x_offset + 20, $y_offset + 50);
-  $pdf->Write(10, "Receipt No: " . $receipt_number);
-  $pdf->SetX($x_offset + 95);
-
-  $amount = $contribution->total_amount - $contribution->non_deductible_amount;
-  $pdf->Write(10, "Eligible Gift Amount:  $" . number_format($amount,2));
-
-  $pdf->SetXY($x_offset + 20, $y_offset + 56);
-  $today = date("Y-m-d");
-  $pdf->Write(10, "Issue Date: ". $today);
-
-  $pdf->SetX($x_offset + 95);
-  $pdf->Write(10, "Received on: " . $display_date);
-
-  $pdf->SetFont('Helvetica', 'B', 8);
-  $pdf->SetXY($x_offset + 95, $y_offset + 62);
-  $pdf->Write(10, "Received from: ");
-  $pdf->SetXY($x_offset + 128, $y_offset + 62);
-  $pdf->Write(10, $displayName);
-  $pdf->SetXY($x_offset + 128, $y_offset + 66);
-  $pdf->Write(10, $address_line_1);
-  $pdf->SetXY($x_offset + 128, $y_offset + 70);
-  $pdf->Write(10, $address_line_2);
-  $pdf->SetXY($x_offset + 128, $y_offset + 74);
-  $pdf->Write(10, $address_line_3);
-  $pdf->SetFont('Helvetica', 'B', 8);
-  $pdf->SetXY($x_offset + 95, $y_offset + 80);
-
-  if (strlen($source_funds) < 38) {
-    $pdf->Write(10, "Source: " . $source_funds);
-  } else {
-    $source_funds_words = explode(" ", substr($source_funds, 0, 38));
-    $source_funds_lastbit = array_pop($source_funds_words);
-    $pdf->Write(10, "Source: " . implode(" ", $source_funds_words));
-
-    $source_funds_count = count($source_funds_words);
-    $source_funds_nextline = array_splice(explode(" ", $source_funds), $source_funds_count);
-
-    $pdf->SetXY($x_offset + 113, $y_offset + 84);
-    $pdf->Write(10, implode(" ", $source_funds_nextline));
-  }
-
-  $pdf->SetXY($x_offset + 20, $y_offset + 88);
-  $pdf->Write(10, variable_get('cdntaxreceipts_org_name', ''));
-  $pdf->SetFont('Helvetica', '', 8);
-  $pdf->SetXY($x_offset + 20, $y_offset + 92);
-  $pdf->Write(10, variable_get('cdntaxreceipts_address_line1', ''));
-  $pdf->SetXY($x_offset + 20, $y_offset + 96);
-  $pdf->Write(10, variable_get('cdntaxreceipts_address_line2', ''));
-
-  $pdf->SetXY($x_offset + 20, $y_offset + 100);
-  $pdf->Write(10, 'Tel: ' . variable_get('cdntaxreceipts_tel', ''));
-  $pdf->SetXY($x_offset + 20, $y_offset + 104);
-  $pdf->Write(10, 'Fax: ' . variable_get('cdntaxreceipts_fax', ''));
-
-  $pdf->Image(variable_get('cdntaxreceipts_signature', $pdf_receipt_files_path . 'authorized-signature.png'), $x_offset + 132, $y_offset + 92, 30, 15);
-  $pdf->Line($x_offset + 130, $y_offset + 102, $x_offset + 170, $y_offset + 102);
-  $pdf->SetXY($x_offset + 145, $y_offset + 99);
-  $pdf->SetFont("Times", "I", 7);
-  $pdf->Write(10, 'Authorized Signature');
-
-  $pdf->SetXY($x_offset + 20, $y_offset + 108);
-  $pdf->Write(10, 'Email: ' . variable_get('cdntaxreceipts_email', ''));
-  $pdf->SetXY($x_offset + 20, $y_offset + 112);
-  $pdf->Write(10, 'Web Site: ' . variable_get('cdntaxreceipts_web', ''));
-
-  $pdf->SetXY($x_offset + 70, $y_offset + 130);
-  $pdf->Write(10, 'Canadian Revenue Agency: www.cra-arc.gc.ca/charites');
-
-  $pdf->Line($x_offset + 10, $y_offset + 145, $x_offset + 200, $y_offset + 145);
-
-  // if original receipt, add a duplicate copy
-  if( $original_receipt ) {
+  if( !$original_receipt ) {
+    $x_offset = 0;
+    $y_offset = -7;
+    // print duplicate copy only
+    cdntaxreceipts_createPDF($pdf, $x_offset, $y_offset, $original_receipt, $pdf_receipt_files_path, $line_1, $source_funds, $amount, $display_date, $receipt_number, $displayName, $address_line_1, $address_line_2, $address_line_3);
+  } elseif ( $original_receipt ) {
+    // print original AND duplicate copy
+    $x_offset = 0;
+    $y_offset = -7;
+    cdntaxreceipts_createPDF($pdf, $x_offset, $y_offset, $original_receipt, $pdf_receipt_files_path, $line_1, $source_funds, $amount, $display_date, $receipt_number, $displayName, $address_line_1, $address_line_2, $address_line_3);
     $x_offset = 0;
     $y_offset = 133;
-
-    $pdf->Image($pdf_receipt_files_path . 'duplicate_copy.png', $x_offset + 35, $y_offset + 35, 60, 48);
-
-    if ($background_image) $pdf->Image(variable_get('cdntaxreceipts_bg', ''), $x_offset + 90, $y_offset + 35);
-
-    $pdf->Image(variable_get('cdntaxreceipts_logo', $pdf_receipt_files_path . 'your-logo.png'), $x_offset + 10, $y_offset + 14, 70, 30);
-    $pdf->SetFont('Helvetica', 'B', 8);
-
-    $pdf->SetXY($x_offset + 95, $y_offset + 20);
-    $pdf->Write(10, $line_1);
-    $pdf->SetXY($x_offset + 125, $y_offset + 24);
-    $pdf->Write(10, 'Thank You!');
-    $pdf->SetXY($x_offset + 95, $y_offset + 28);
-    $pdf->Write(10, 'Charitable Registration No. ' . variable_get('cdntaxreceipts_charitable_no', ''));
-
-    $pdf->SetXY($x_offset + 20, $y_offset + 50);
-    $pdf->Write(10, "Receipt No: " . $receipt_number);
-
-    $pdf->SetX($x_offset + 95);
-    $amount = $contribution->total_amount - $contribution->non_deductible_amount;
-    $pdf->Write(10, "Eligible Gift Amount::  $" . number_format($amount,2));
-
-    $pdf->SetXY($x_offset + 20, $y_offset + 56);
-    $today = date("Y-m-d");
-    $pdf->Write(10, "Issue Date: ". $today);
-
-    $pdf->SetX($x_offset + 95);
-    $pdf->Write(10, "Received on: " . $display_date);
-
-    $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->SetXY($x_offset + 95, $y_offset + 62);
-    $pdf->Write(10, "Received from: ");
-    $pdf->SetXY($x_offset + 128, $y_offset + 62);
-    $pdf->Write(10, $displayName);
-    $pdf->SetXY($x_offset + 128, $y_offset + 66);
-    $pdf->Write(10, $address_line_1);
-    $pdf->SetXY($x_offset + 128, $y_offset + 70);
-    $pdf->Write(10, $address_line_2);
-    $pdf->SetXY($x_offset + 128, $y_offset + 74);
-    $pdf->Write(10, $address_line_3);
-    $pdf->SetFont('Helvetica', 'B', 8);
-    $pdf->SetXY($x_offset + 95, $y_offset + 80);
-
-    if (strlen($source_funds) < 38) {
-      $pdf->Write(10, "Source: " . $source_funds);
-    } else {
-      $source_funds_words = explode(" ", substr($source_funds, 0, 38));
-      $source_funds_lastbit = array_pop($source_funds_words);
-      $pdf->Write(10, "Source: " . implode(" ", $source_funds_words));
-
-      $source_funds_count = count($source_funds_words);
-      $source_funds_nextline = array_splice(explode(" ", $source_funds), $source_funds_count);
-
-      $pdf->SetXY($x_offset + 113, $y_offset + 84);
-      $pdf->Write(10, implode(" ", $source_funds_nextline));
-    }
-
-    $pdf->SetXY($x_offset + 20, $y_offset + 88);
-    $pdf->Write(10, variable_get('cdntaxreceipts_org_name', ''));
-    $pdf->SetFont('Helvetica', '', 8);
-    $pdf->SetXY($x_offset + 20, $y_offset + 92);
-    $pdf->Write(10, variable_get('cdntaxreceipts_address_line1', ''));
-    $pdf->SetXY($x_offset + 20, $y_offset + 96);
-    $pdf->Write(10, variable_get('cdntaxreceipts_address_line2', ''));
-
-    $pdf->SetXY($x_offset + 20, $y_offset + 100);
-    $pdf->Write(10, 'Tel: ' . variable_get('cdntaxreceipts_tel', ''));
-    $pdf->SetXY($x_offset + 20, $y_offset + 104);
-    $pdf->Write(10, 'Fax: ' . variable_get('cdntaxreceipts_fax', ''));
-
-    $pdf->Image(variable_get('cdntaxreceipts_signature', $pdf_receipt_files_path . 'authorized-signature.png'), $x_offset + 132, $y_offset + 92, 30, 15);
-    $pdf->Line($x_offset + 130, $y_offset + 102, $x_offset + 170, $y_offset + 102);
-    $pdf->SetXY($x_offset + 145, $y_offset + 99);
-    $pdf->SetFont("Times", "I", 7);
-    $pdf->Write(10, 'Authorized Signature');
-
-    $pdf->SetXY($x_offset + 20, $y_offset + 108);
-    $pdf->Write(10, 'Email: ' . variable_get('cdntaxreceipts_email', ''));
-    $pdf->SetXY($x_offset + 20, $y_offset + 112);
-    $pdf->Write(10, 'Web Site: ' . variable_get('cdntaxreceipts_web', ''));
-
-    $pdf->SetXY($x_offset + 70, $y_offset + 130);
-    $pdf->Write(10, 'Canadian Revenue Agency: www.cra-arc.gc.ca/charites');
+    cdntaxreceipts_createPDF($pdf, $x_offset, $y_offset, $original_receipt=FALSE, $pdf_receipt_files_path, $line_1, $source_funds, $amount, $display_date, $receipt_number, $displayName, $address_line_1, $address_line_2, $address_line_3);
   }
 
   $pdf->Close();
@@ -261,6 +102,99 @@ require_once('this_tcpdf/tcpdf.php');
   return array($pdf_file, $user_friendly);
 }
 
+function cdntaxreceipts_createPDF($pdf, $x_offset, $y_offset, $original_receipt, $pdf_receipt_files_path, $line_1, $source_funds, $amount, $display_date, $receipt_number, $displayName, $address_line_1, $address_line_2, $address_line_3) {
+
+  if(!$original_receipt) $pdf->Image($pdf_receipt_files_path . 'duplicate_copy.png', $x_offset + 35, $y_offset + 35, 60, 48);
+
+  $background_image = variable_get('cdntaxreceipts_bg', '');
+  if($background_image) $pdf->Image(variable_get('cdntaxreceipts_bg', ''), $x_offset + 90, $y_offset + 35);
+
+  $pdf->Image(variable_get('cdntaxreceipts_logo', $pdf_receipt_files_path . 'your-logo.png'), $x_offset + 10, $y_offset + 14, '', 30);
+
+  $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->SetXY($x_offset + 10, $y_offset + 50);
+  $pdf->Write(10, "Receipt No: " . $receipt_number);
+
+  $pdf->SetXY($x_offset + 95, $y_offset + 50);
+  $pdf->Write(10, 'Charitable Registration ' . variable_get('cdntaxreceipts_charitable_no', ''));
+
+  $pdf->SetXY($x_offset + 10, $y_offset + 56);
+  $today = date("Y-m-d");
+  $pdf->Write(10, "Issue Date: ". $today);
+
+  $pdf->SetXY($x_offset + 95, $y_offset + 56);
+  $pdf->Write(10, "Received on: " . $display_date);
+
+  $pdf->SetXY($x_offset + 95, $y_offset + 62);
+  $pdf->Write(10, "Eligible Gift Amount:  $" . number_format($amount,2));
+
+  $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->SetXY($x_offset + 95, $y_offset + 68);
+  $pdf->Write(10, "Received from: ");
+  $pdf->SetFont('Helvetica', 'B', 10);
+  $pdf->SetXY($x_offset + 120, $y_offset + 68);
+  $pdf->Write(10, $displayName);
+  $pdf->SetFont('Helvetica', '', 10);
+  $pdf->SetXY($x_offset + 120, $y_offset + 72);
+  $pdf->Write(10, $address_line_1);
+  $pdf->SetXY($x_offset + 120, $y_offset + 76);
+  $pdf->Write(10, $address_line_2);
+  $pdf->SetXY($x_offset + 120, $y_offset + 80);
+  $pdf->Write(10, $address_line_3);
+
+  $pdf->Image(variable_get('cdntaxreceipts_signature', $pdf_receipt_files_path . 'authorized-signature.png'), $x_offset + 138, $y_offset + 122,'', 15);
+  $pdf->Line($x_offset + 136, $y_offset + 133, $x_offset + 184, $y_offset + 133);
+  $pdf->SetXY($x_offset + 158, $y_offset + 130);
+  $pdf->SetFont("Helvetica", "I", 7);
+  $pdf->Write(10, 'Authorized Signature');
+
+  $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->SetXY($x_offset + 95, $y_offset + 86);
+
+  if (strlen($source_funds) < 38) {
+    $pdf->Write(10, "Source: " . $source_funds);
+  } else {
+    $source_funds_words = explode(" ", substr($source_funds, 0, 38));
+    $source_funds_lastbit = array_pop($source_funds_words);
+    $pdf->Write(10, "Source: " . implode(" ", $source_funds_words));
+
+    $source_funds_count = count($source_funds_words);
+    $source_funds_nextline = array_splice(explode(" ", $source_funds), $source_funds_count);
+
+    $pdf->SetXY($x_offset + 113, $y_offset + 90);
+    $pdf->Write(10, implode(" ", $source_funds_nextline));
+  }
+
+  $pdf->SetXY(0, $y_offset + 10);
+  $pdf->Write(10, variable_get('cdntaxreceipts_org_name', ''), '', 0, 'R', true, 0, false, false, 0);
+
+  $pdf->SetFont('Helvetica', '', 8);
+  $pdf->SetXY(0, $y_offset + 14);
+  $pdf->Write(10, variable_get('cdntaxreceipts_address_line1', ''), '', 0, 'R', true, 0, false, false, 0);
+  $pdf->SetXY(0, $y_offset + 18);
+  $pdf->Write(10, variable_get('cdntaxreceipts_address_line2', ''), '', 0, 'R', true, 0, false, false, 0);
+
+  $pdf->SetXY(0, $y_offset + 22);
+  $pdf->Write(10, 'Tel: ' . variable_get('cdntaxreceipts_tel', '') . '; Fax: ' . variable_get('cdntaxreceipts_fax', ''), '', 0, 'R', true, 0, false, false, 0);
+
+  $pdf->SetFont('Helvetica', 'I', 8);
+  $pdf->SetXY(0, $y_offset + 26);
+  $pdf->Write(10, 'Email: ' . variable_get('cdntaxreceipts_email', '') . '; Website: ' . variable_get('cdntaxreceipts_web', ''), '', 0, 'R', true, 0, false, false, 0);
+
+  $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->SetXY($x_offset + 10, $y_offset + 122);
+  $pdf->Write(10, 'Thank you! Merci!', '', 0, 'L', true, 0, false, false, 0);
+
+  $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->SetXY($x_offset + 10, $y_offset + 126);
+  $pdf->Write(10, $line_1, '', 0, 'L', true, 0, false, false, 0);
+
+  $pdf->SetFont('Helvetica', '', 8);
+  $pdf->SetXY($x_offset + 10, $y_offset + 130);
+  $pdf->Write(10, 'Canadian Revenue Agency: www.cra-arc.gc.ca/charites', '', 0, 'L', true, 0, false, false, 0);
+
+  $pdf->Line($x_offset + 10, $y_offset + 145, $x_offset + 200, $y_offset + 145);
+}
 
 function cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt ) {
 
