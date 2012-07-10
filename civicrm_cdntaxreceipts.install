@@ -10,24 +10,24 @@
  * Implementation of hook_install().
  */
 function civicrm_cdntaxreceipts_install() {
-	require_once drupal_get_path('module', 'civicrm') . '/civicrm.module';
+  require_once drupal_get_path('module', 'civicrm') . '/civicrm.module';
 
   if ( ! civicrm_initialize( ) ) {
     return;
   }
 
   require_once 'CRM/Core/Config.php';
-  $config =& CRM_Core_Config::singleton(); 
-     	
-  // Previously the TABLE that stores the contribution IDs of the Donations that a Tax Receipt has been 
-  // issued for was called: civicrm_pdfreceipts - Our goal is to copy over any content from that TABLE 
+  $config =& CRM_Core_Config::singleton();
+
+  // Previously the TABLE that stores the contribution IDs of the Donations that a Tax Receipt has been
+  // issued for was called: civicrm_pdfreceipts - Our goal is to copy over any content from that TABLE
   // INTO a new TABLE called: civicrm_cdntaxreceipts. To do so we must create an EMPTY civicrm_pdfreceipts
-  // TABLE if it did NOT previously already EXIST so that NEXT we can then SELECT data from the 
+  // TABLE if it did NOT previously already EXIST so that NEXT we can then SELECT data from the
   // civicrm_pdreceipts TABLE to be migrated
-  
+
   $sql_create = "CREATE TABLE IF NOT EXISTS civicrm_pdfreceipts (" .
     " contribution_id INT UNSIGNED NOT NULL, " .
-    " tax_receipt_date datetime NULL, ".
+    " tax_receipt_date datetime NULL, " .
     " PRIMARY KEY (contribution_id), " .
     " FOREIGN KEY (contribution_id) REFERENCES civicrm_contribution(id) ON DELETE CASCADE " .
     ")";
@@ -36,47 +36,47 @@ function civicrm_cdntaxreceipts_install() {
   CRM_Core_DAO::executeQuery( $sql_create );
 
   // Create a civicrm_cdntacxreceipts TABLE if it does NOT already EXIST. If it does EXIST no need to do
-  // anything -> we'll append the Contribution IDs for newly issued Tax Receipts. If it has to be 
+  // anything -> we'll append the Contribution IDs for newly issued Tax Receipts. If it has to be
   // CREATEd then check to see if the civicrm_pdfreceipts TABLE has content. If so SELECT it and copy
   // it into the NEW civicrm_cdntaxreceipts table
-  
-  $sql_copy = "CREATE TABLE IF NOT EXISTS civicrm_cdntaxreceipts SELECT * FROM civicrm_pdfreceipts WHERE contribution_id > 0"; 
+
+  $sql_copy = "CREATE TABLE IF NOT EXISTS civicrm_cdntaxreceipts SELECT * FROM civicrm_pdfreceipts WHERE contribution_id > 0";
   CRM_Core_DAO::executeQuery( $sql_copy );
 
   // Fix the column name: tax_receipt_date is actually contribution received_date
-  
-  $sql_rename = "ALTER TABLE civicrm_cdntaxreceipts CHANGE tax_receipt_date received_date datetime";  
+
+  $sql_rename = "ALTER TABLE civicrm_cdntaxreceipts CHANGE tax_receipt_date received_date datetime";
   CRM_Core_DAO::executeQuery( $sql_rename );
-  
+
   // RENAME the old civicrm_pdfreceipts TABLE TO archive it
-  
+
   $sql_archive = "RENAME TABLE civicrm_pdfreceipts TO civicrm_pdfreceipts_archive";
-  CRM_Core_DAO::executeQuery( $sql_archive ); 
-  
+  CRM_Core_DAO::executeQuery( $sql_archive );
+
 }
 
 /**
  * Implementation of hook_update_N().
  */
-function civicrm_cdntaxreceipts_update_6100() {	
-	require_once drupal_get_path('module', 'civicrm') . '/civicrm.module';
+function civicrm_cdntaxreceipts_update_6100() {
+  require_once drupal_get_path('module', 'civicrm') . '/civicrm.module';
 
   if ( ! civicrm_initialize( ) ) {
     return;
   }
 
   require_once 'CRM/Core/Config.php';
-  $config =& CRM_Core_Config::singleton(); 
-     	
-  // Previously the TABLE that stores the contribution IDs of the Donations that a Tax Receipt has been 
-  // issued for was called: civicrm_pdfreceipts - Our goal is to copy over any content from that TABLE 
+  $config =& CRM_Core_Config::singleton();
+
+  // Previously the TABLE that stores the contribution IDs of the Donations that a Tax Receipt has been
+  // issued for was called: civicrm_pdfreceipts - Our goal is to copy over any content from that TABLE
   // INTO a new TABLE called: civicrm_cdntaxreceipts. To do so we must create an EMPTY civicrm_pdfreceipts
-  // TABLE if it did NOT previously already EXIST so that NEXT we can then SELECT data from the 
+  // TABLE if it did NOT previously already EXIST so that NEXT we can then SELECT data from the
   // civicrm_pdreceipts TABLE to be migrated
-  
+
   $sql_create = "CREATE TABLE IF NOT EXISTS civicrm_pdfreceipts (" .
     " contribution_id INT UNSIGNED NOT NULL, " .
-    " tax_receipt_date datetime NULL, ".
+    " tax_receipt_date datetime NULL, " .
     " PRIMARY KEY (contribution_id), " .
     " FOREIGN KEY (contribution_id) REFERENCES civicrm_contribution(id) ON DELETE CASCADE " .
     ")";
@@ -85,27 +85,27 @@ function civicrm_cdntaxreceipts_update_6100() {
   CRM_Core_DAO::executeQuery( $sql_create );
 
   // Create a civicrm_cdntacxreceipts TABLE if it does NOT already EXIST. If it does EXIST no need to do
-  // anything -> we'll append the Contribution IDs for newly issued Tax Receipts. If it has to be 
+  // anything -> we'll append the Contribution IDs for newly issued Tax Receipts. If it has to be
   // CREATEd then check to see if the civicrm_pdfreceipts TABLE has content. If so SELECT it and copy
   // it into the NEW civicrm_cdntaxreceipts table
-  
-  $sql_copy = "CREATE TABLE IF NOT EXISTS civicrm_cdntaxreceipts SELECT * FROM civicrm_pdfreceipts WHERE contribution_id > 0"; 
+
+  $sql_copy = "CREATE TABLE IF NOT EXISTS civicrm_cdntaxreceipts SELECT * FROM civicrm_pdfreceipts WHERE contribution_id > 0";
   CRM_Core_DAO::executeQuery( $sql_copy );
 
   // Fix the column name: tax_receipt_date is actually contribution received_date
-  
-  $sql_rename = "ALTER TABLE civicrm_cdntaxreceipts CHANGE tax_receipt_date received_date datetime";  
+
+  $sql_rename = "ALTER TABLE civicrm_cdntaxreceipts CHANGE tax_receipt_date received_date datetime";
   CRM_Core_DAO::executeQuery( $sql_rename );
-  
+
   // RENAME the old civicrm_pdfreceipts TABLE TO archive it
-  
+
   $sql_archive = "RENAME TABLE civicrm_pdfreceipts TO civicrm_pdfreceipts_archive";
-  CRM_Core_DAO::executeQuery( $sql_archive ); 
-        
+  CRM_Core_DAO::executeQuery( $sql_archive );
+
   $ret = array("#1");
-  return $ret; 
-    
+  return $ret;
+
 }
-  
+
 
 
