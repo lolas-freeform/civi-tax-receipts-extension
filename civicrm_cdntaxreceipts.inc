@@ -21,7 +21,7 @@
  */
 
 
-  function cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
+  function civicrm_cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
 
   $contactid = $contribution->contact_id;
   $pdf_receipt_files_path = dirname(__FILE__) . '/pdf_receipt_files/';
@@ -45,14 +45,14 @@
   $address_line_2 = $address['city'] . ' ' . $address['state_province'] . ' ' . $address['postal_code'];
   $address_line_3 = $address['country'];
 
-  list( $displayname, $email ) = CRM_Contact_BAO_Contact::getContactDetails( $contactid );
+  list($displayname, $email) = CRM_Contact_BAO_Contact::getContactDetails($contactid);
   $pos = strpos($contribution->receive_date, '-');
-  if ( $pos === FALSE ) {
-     $date = substr($contribution->receive_date, 0, 8);
-     $display_date = substr($date, 0, 4) . '-' . substr($date, 4, 2) . '-' . substr($date, 6, 2);
+  if ($pos === FALSE) {
+    $date = substr($contribution->receive_date, 0, 8);
+    $display_date = substr($date, 0, 4) . '-' . substr($date, 4, 2) . '-' . substr($date, 6, 2);
   }
   else {
-     $display_date = substr($contribution->receive_date, 0, 10);
+    $display_date = substr($contribution->receive_date, 0, 10);
   }
 
   $line_1 = "This is your Official Receipt for income tax purposes.";
@@ -65,8 +65,8 @@
   $source_funds = $contribution->source;
   $amount = $contribution->total_amount - $contribution->non_deductible_amount;
 
-  require_once('this_tcpdf/config/lang/eng.php');
-  require_once('this_tcpdf/tcpdf.php');
+  require_once this_tcpdf/config/lang/eng.php;
+  require_once this_tcpdf/tcpdf.php;
 
   $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, TRUE, 'UTF-8', FALSE);
   $pdf->Open();
@@ -103,24 +103,25 @@
     "address_line_3" => $address_line_3,
   );
 
-  if ( !$original_receipt ) {
+  if (!$original_receipt) {
     // print duplicate copy
-    cdntaxreceipts_createPDF($pdf, $pdf_variables);
+    civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables);
   }
-  elseif ( $original_receipt ) {
+  elseif ($original_receipt) {
     // print original AND duplicate copy
-    cdntaxreceipts_createPDF($pdf, $pdf_variables);
+    civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables);
     $pdf_variables["mymargin_top"] = $mymargin_top + 94;
     $pdf_variables["original_receipt"] = FALSE;
-    cdntaxreceipts_createPDF($pdf, $pdf_variables);
+    civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables);
     $pdf_variables["mymargin_top"] = $mymargin_top + 94*2;
     $pdf_variables["original_receipt"] = FALSE;
-    cdntaxreceipts_createPDF($pdf, $pdf_variables);
+    civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables);
   }
 
   $pdf->Close();
 
-  //notice: ob_end_clean() [ref.outcontrol]: failed to delete buffer. No buffer to delete
+  //notice: ob_end_clean() [ref.outcontrol]: failed to delete buffer.
+  //No buffer to delete
   //$pdf->Output($pdf_file, 'F');
   while ( @ob_end_clean() );
   $pdf->Output($pdf_file, 'FD');
@@ -128,7 +129,7 @@
   return array($pdf_file, $user_friendly);
 }
 
-function cdntaxreceipts_createPDF($pdf, $pdf_variables) {
+function civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables) {
 
   // Extract variables
   $mymargin_left = $pdf_variables["mymargin_left"];
@@ -236,13 +237,13 @@ function cdntaxreceipts_createPDF($pdf, $pdf_variables) {
   $pdf->Line($mymargin_left, $mymargin_top + 93, 198, $mymargin_top + 93, 'dash');
 }
 
-function cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt ) {
+function civicrm_cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt ) {
 
   // grab the various objects that are relevant to the mail message...
   require_once 'CRM/Contribute/DAO/ContributionType.php';
   $contributiontype =  new CRM_Contribute_DAO_ContributionType();
   $contributiontype->id = $contribution->contribution_type_id;
-  if ( ! $contributiontype->find( TRUE ) ) {
+  if (! $contributiontype->find(TRUE)) {
     CRM_Core_Error::fatal( "Could not find corresponding contribution type." );
     return;
   }
@@ -252,7 +253,7 @@ function cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt ) {
 
   // generate the receipt
 
-  list($pdf_file, $user_friendly) = cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt );
+  list($pdf_file, $user_friendly) = civicrm_cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt );
   $attachment = array(
     'fullPath' => $pdf_file,
     'mime_type' => 'application/pdf',
@@ -285,14 +286,14 @@ function cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt ) {
 
   $ret = CRM_Utils_Mail::send( $mailparams );
 
-  cdntaxreceipts_cleanup( $pdf_file );
+  civicrm_cdntaxreceipts_cleanup( $pdf_file );
 }
 
-function cdntaxreceipts_cleanup($pdf_file) {
+function civicrm_cdntaxreceipts_cleanup($pdf_file) {
   unlink($pdf_file);
 }
 
-function cdntaxreceipts_taxReceiptSent( &$contribution ) {
+function civicrm_cdntaxreceipts_taxReceiptSent( &$contribution ) {
 
   $query = "
     SELECT contribution_id
@@ -304,7 +305,7 @@ function cdntaxreceipts_taxReceiptSent( &$contribution ) {
 
 }
 
-function cdntaxreceipts_recordTaxReceipt( &$contribution ) {
+function civicrm_cdntaxreceipts_recordTaxReceipt( &$contribution ) {
 
   $query = "
     INSERT INTO civicrm_cdntaxreceipts (contribution_id, received_date)

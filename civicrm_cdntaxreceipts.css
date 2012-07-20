@@ -4,15 +4,15 @@
 }
 
 #crm-container #_qf_ContributionView_submit_send_receipt-top {
-	text-indent: 16px;
-  background: url("mapleleaf_white.png") no-repeat 2px 100%;
+  text-indent: 16px;
+  background: no-repeat url("mapleleaf_white.png") 2px 100%;
   padding: 0px 6px;
   min-height: 18px;
 }
 
 #crm-container #_qf_ContributionView_submit_send_receipt-bottom {
-	text-indent: 16px;
-  background: url("mapleleaf_white.png") no-repeat 2px 100%;
+  text-indent: 16px;
+  background: no-repeat url("mapleleaf_white.png") 2px 100%;
   padding: 0px 6px;
   min-height: 18px;
 }
@@ -23,15 +23,15 @@
 }
 
 #crm-container #_qf_ContributionView_submit_send_receipt_copy-top {
-	text-indent: 16px;
-  background: url("mapleleaf_red.png") no-repeat 2px 100%;
+  text-indent: 16px;
+  background: no-repeat url("mapleleaf_red.png") 2px 100%;
   padding: 0px 6px;
   min-height: 18px;
 }
 
 #crm-container #_qf_ContributionView_submit_send_receipt_copy-bottom {
-	text-indent: 16px;
-  background: url("mapleleaf_red.png") no-repeat 2px 100%;
+  text-indent: 16px;
+  background: no-repeat url("mapleleaf_red.png") 2px 100%;
   padding: 0px 6px;
   min-height: 18px;
 }
