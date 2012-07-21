@@ -65,8 +65,8 @@
   $source_funds = $contribution->source;
   $amount = $contribution->total_amount - $contribution->non_deductible_amount;
 
-  require_once this_tcpdf/config/lang/eng.php;
-  require_once this_tcpdf/tcpdf.php;
+  require_once('this_tcpdf/config/lang/eng.php');
+  require_once('this_tcpdf/tcpdf.php');
 
   $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, TRUE, 'UTF-8', FALSE);
   $pdf->Open();
