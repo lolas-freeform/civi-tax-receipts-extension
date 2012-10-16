@@ -20,8 +20,7 @@
  * @return receipts
  */
 
-
-  function civicrm_cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt ) {
+  function civicrm_cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt, $inkind_values ) {
 
   $contactid = $contribution->contact_id;
   $pdf_receipt_files_path = dirname(__FILE__) . '/pdf_receipt_files/';
@@ -105,17 +104,17 @@
 
   if (!$original_receipt) {
     // print duplicate copy
-    civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables);
+    civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables, $inkind_values);
   }
   elseif ($original_receipt) {
     // print original AND duplicate copy
-    civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables);
+    civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables, $inkind_values);
     $pdf_variables["mymargin_top"] = $mymargin_top + 94;
     $pdf_variables["original_receipt"] = FALSE;
-    civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables);
+    civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables, $inkind_values);
     $pdf_variables["mymargin_top"] = $mymargin_top + 94*2;
     $pdf_variables["original_receipt"] = FALSE;
-    civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables);
+    civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables, $inkind_values);
   }
 
   $pdf->Close();
@@ -129,7 +128,7 @@
   return array($pdf_file, $user_friendly);
 }
 
-function civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables) {
+function civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables, $inkind_values) {
 
   // Extract variables
   $mymargin_left = $pdf_variables["mymargin_left"];
@@ -165,23 +164,21 @@ function civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables) {
   $pdf->SetFont('Helvetica', 'I', 8);
   $pdf->SetY($mymargin_top + 16);
   $pdf->Write(10, 'Email: ' . variable_get('cdntaxreceipts_email', '') . '; Website: ' . variable_get('cdntaxreceipts_web', ''), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
+  $pdf->SetY($mymargin_top + 20);
+  $pdf->Write(10, 'Charitable Registration ' . variable_get('cdntaxreceipts_charitable_no', ''), '', 0, 'R', TRUE, 0, FALSE, FALSE, 0);
 
   // Right section
   $x_detailscolumn = 120;
-  $y_detailscolumnstart = 24;
+  $y_detailscolumnstart = 27;
   $background_image = variable_get('cdntaxreceipts_bg', '');
   if ( $background_image ) $pdf->Image(variable_get('cdntaxreceipts_bg', ''), $mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart, '', 50);
-  $pdf->SetFont('Helvetica', 'B', 8);
-  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 4);
-  $pdf->Write(10, "Receipt No: " . $receipt_number);
-  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 10);
+  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 6);
   $today = date("Y-m-d");
+  $pdf->SetFont('Helvetica', 'B', 8);
   $pdf->Write(10, "Issue Date: " . $today);
-  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 16);
-  $pdf->Write(10, 'Charitable Registration ' . variable_get('cdntaxreceipts_charitable_no', ''));
-  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 22);
+  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 12);
   $pdf->Write(10, "Received on: " . $display_date);
-  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 28);
+  $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 18);
   $pdf->Write(10, "Eligible Gift Amount:  $" . number_format($amount, 2));
   $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 34);
 
@@ -200,6 +197,9 @@ function civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables) {
 
   // Left section
   $pdf->SetFont('Helvetica', 'B', 8);
+  $pdf->SetY($mymargin_top + $y_detailscolumnstart + 6);
+  $pdf->Write(10, "Receipt No: " . $receipt_number);
+  $pdf->SetFont('Helvetica', 'B', 8);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 10);
   $pdf->Write(10, "Received from: ", '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
   $pdf->SetFont('Helvetica', 'B', 10);
@@ -212,6 +212,45 @@ function civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables) {
   $pdf->Write(10, strtoupper($address_line_2), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
   $pdf->SetY($mymargin_top + $y_detailscolumnstart + 34);
   $pdf->Write(10, strtoupper($address_line_3), '', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+
+
+  // If this is an in-kind donation
+  if ( !empty($inkind_values) ) {
+
+    $inkind_str = 'Donation in-kind: ' . $inkind_values[0];
+
+    if (!empty($inkind_values[3])) {
+      if ($inkind_values[3] < $amount) {
+          $inkind_str = 'Donation in-kind: ' . $inkind_values[0] . ' - ' . 'Cost: ' . $inkind_values[3];
+      }
+      else
+      {
+          $inkind_str = 'Donation in-kind: ' . $inkind_values[0];
+      }
+    }
+
+    $pdf->SetFont('Helvetica', '', 8);
+    $pdf->SetY($mymargin_top + 74);
+    $pdf->Write(10, $inkind_str, ' - ', 0, 'L', TRUE, 0, FALSE, FALSE, 0);
+
+    $appraiser = $inkind_values[1] . ' - '. $inkind_values[2];
+    $pdf->SetFont('Helvetica', 'B', 8);
+    $pdf->SetXY($mymargin_left + $x_detailscolumn, $mymargin_top + $y_detailscolumnstart + 24);
+
+    if (strlen($appraiser) < 36) {
+      $pdf->Write(10, "Appraiser: " . $appraiser);
+    }
+    else {
+      $appraiser_words = explode(" ", substr($appraiser, 0, 36));
+      $appraiser_lastbit = array_pop($appraiser_words);
+      $pdf->Write(10, "Appraiser: " . implode(" ", $appraiser_words));
+      $appraiser_count = count($appraiser_words);
+      $appraiser_nextline = array_splice(explode(" ", $appraiser), $appraiser_count);
+      $pdf->SetXY($mymargin_left + $x_detailscolumn + 16, $mymargin_top + $y_detailscolumnstart + 28);
+      $pdf->Write(10, implode(" ", $appraiser_nextline));
+    }
+
+  }
 
   // Bottom left section
   $pdf->SetFont('Helvetica', 'B', 8);
@@ -237,7 +276,7 @@ function civicrm_cdntaxreceipts_createPDF($pdf, $pdf_variables) {
   $pdf->Line($mymargin_left, $mymargin_top + 93, 198, $mymargin_top + 93, 'dash');
 }
 
-function civicrm_cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt ) {
+function civicrm_cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt) {
 
   // grab the various objects that are relevant to the mail message...
   require_once 'CRM/Contribute/DAO/ContributionType.php';
@@ -251,9 +290,48 @@ function civicrm_cdntaxreceipts_issueTaxReceipt( $contribution, $original_receip
   require_once 'CRM/Contact/BAO/Contact.php';
   list( $displayname, $email ) = CRM_Contact_BAO_Contact::getContactDetails( $contribution->contact_id );
 
-  // generate the receipt
+  $inkind_values = array();
+  // check if this is an 'In-kind" contribution.
+  if ( $contributiontype->name == 'In-kind' ) {
+    // in this case get the custom field values:
+    require_once 'CRM/Core/BAO/CustomField.php';
+    $groupTitle = 'In-kind donation fields';
+    $fieldLabel_description = 'Description of property';
+    $customFieldID_description = CRM_Core_BAO_CustomField::getCustomFieldID( $fieldLabel_description, $groupTitle );
+    $fieldLabel_appraisedby = 'Appraised by';
+    $customFieldID_appraisedby = CRM_Core_BAO_CustomField::getCustomFieldID( $fieldLabel_appraisedby, $groupTitle );
+    $fieldLabel_appraiseraddress = 'Address of Appraiser';
+    $customFieldID_appraiseraddress = CRM_Core_BAO_CustomField::getCustomFieldID( $fieldLabel_appraiseraddress, $groupTitle );
+    $fieldLabel_cost = 'Original cost';
+    $customFieldID_cost = CRM_Core_BAO_CustomField::getCustomFieldID( $fieldLabel_cost, $groupTitle );
 
-  list($pdf_file, $user_friendly) = civicrm_cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt );
+    require_once 'CRM/Core/BAO/CustomValueTable.php';
+
+    $custom_id = 'custom_' . $customFieldID_description;
+    $params = array('entityID' => $contribution->id, $custom_id => 1);
+    $values = CRM_Core_BAO_CustomValueTable::getValues($params);
+    $inkind_values[] = $values[$custom_id];
+
+    $custom_id = 'custom_' . $customFieldID_appraisedby;
+    $params = array('entityID' => $contribution->id, $custom_id => 1);
+    $values = CRM_Core_BAO_CustomValueTable::getValues($params);
+    $inkind_values[] = $values[$custom_id];
+
+    $custom_id = 'custom_' . $customFieldID_appraiseraddress;
+    $params = array('entityID' => $contribution->id, $custom_id => 1);
+    $values = CRM_Core_BAO_CustomValueTable::getValues($params);
+    $inkind_values[] = $values[$custom_id];
+
+    $custom_id = 'custom_' . $customFieldID_cost;
+    $params = array('entityID' => $contribution->id, $custom_id => 1);
+    $values = CRM_Core_BAO_CustomValueTable::getValues($params);
+    $inkind_values[] = $values[$custom_id];
+
+    $test = 1;
+  }
+
+  // generate the receipt
+  list($pdf_file, $user_friendly) = civicrm_cdntaxreceipts_generateTaxReceipt( $contribution, $original_receipt, $inkind_values );
   $attachment = array(
     'fullPath' => $pdf_file,
     'mime_type' => 'application/pdf',
@@ -287,6 +365,8 @@ function civicrm_cdntaxreceipts_issueTaxReceipt( $contribution, $original_receip
   $ret = CRM_Utils_Mail::send( $mailparams );
 
   civicrm_cdntaxreceipts_cleanup( $pdf_file );
+  // patch by Jake;
+  Exit();
 }
 
 function civicrm_cdntaxreceipts_cleanup($pdf_file) {

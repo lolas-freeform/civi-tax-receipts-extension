@@ -76,7 +76,7 @@ function civicrm_cdntaxreceipts_civicrm_postProcess( $formName, &$form ) {
 
   if ( ! is_a( $form, 'CRM_Contribute_Form_ContributionView' ) ) return;
 
-  // get the Contribution info
+  // get the contribution info
   $contributionId = $form->get( 'id' );
   $contribution =  new CRM_Contribute_DAO_Contribution();
   $contribution->id = $contributionId;
@@ -86,7 +86,7 @@ function civicrm_cdntaxreceipts_civicrm_postProcess( $formName, &$form ) {
     return;
   }
 
-  // check if the Contribution is of a Type that is indeed Tax receiptable
+  // check if the contribution is of a Type that is indeed Tax receiptable.
   $contributionType =  new CRM_Contribute_DAO_ContributionType();
   $contributionType->id = $contribution->contribution_type_id;
   if ( ! $contributionType->find( TRUE ) ) {
@@ -111,7 +111,8 @@ function civicrm_cdntaxreceipts_civicrm_postProcess( $formName, &$form ) {
         // Issue the Tax Receipt
         if ( !isset($_POST['_qf_ContributionView_submit_send_receipt']) == 'Issue Tax Receipt'  or
              !isset($_POST['_qf_ContributionView_submit_send_receipt_copy']) == 'Issue Tax Receipt' ) {
-            civicrm_cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt );
+            $test = 1;
+            civicrm_cdntaxreceipts_issueTaxReceipt( $contribution, $original_receipt);
         }
     }
     else {
@@ -305,8 +306,8 @@ function civicrm_cdntaxreceipts_admin_form() {
   $form['message']['cdntaxreceipts_message'] = array(
    '#type' => 'textarea',
    '#title' => t('Email Message'),
-   '#size' => 1000,
-   '#maxlength' => 1000,
+   '#size' => 1500,
+   '#maxlength' => 1500,
    '#default_value' => variable_get('cdntaxreceipts_message', 'Attached please find your official tax receipt for income tax purposes'),
    '#description' => t('Text in the Email to accompany your Tax Receipt.'),
    '#required' => TRUE,
